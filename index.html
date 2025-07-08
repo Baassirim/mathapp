@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Millionaire - Beginner Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                        'light-bg': '#FFFFFF',
+                        'dark-bg': '#181818'
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-slow': 'bounce 1s infinite',
+                        'shake': 'shake 0.6s ease-in-out',
+                        'celebrate': 'celebrate 1s ease-in-out',
+                        'flash-red': 'flashRed 0.8s ease-in-out',
+                        'flash-green': 'flashGreen 0.8s ease-in-out',
+                    },
+                    keyframes: {
+                        shake: {
+                            '0%, 100%': { transform: 'translateX(0)' },
+                            '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-10px)' },
+                            '20%, 40%, 60%, 80%': { transform: 'translateX(10px)' },
+                        },
+                        celebrate: {
+                            '0%': { transform: 'scale(1)' },
+                            '25%': { transform: 'scale(1.1) rotate(2deg)' },
+                            '50%': { transform: 'scale(1.05) rotate(-1deg)' },
+                            '75%': { transform: 'scale(1.08) rotate(1deg)' },
+                            '100%': { transform: 'scale(1)' },
+                        },
+                        flashRed: {
+                            '0%, 100%': { backgroundColor: 'transparent' },
+                            '50%': { backgroundColor: '#ef4444' },
+                        },
+                        flashGreen: {
+                            '0%, 100%': { backgroundColor: 'transparent' },
+                            '50%': { backgroundColor: '#22c55e' },
+                        },
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="h-full bg-light-bg dark:bg-dark-bg text-gray-900 dark:text-gray-100 transition-colors duration-300">
+    <div class="min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="bg-primary text-white p-4 shadow-lg">
+            <div class="container mx-auto flex items-center justify-between">
+                <h1 class="text-2xl md:text-3xl font-bold">🧮 Math Millionaire</h1>
+                <div class="text-sm md:text-base font-semibold">
+                    Question <span id="currentQuestion">1</span> of 15
+                </div>
+            </div>
+        </header>
+
+        <div class="flex-1 container mx-auto p-4 max-w-6xl">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+                <!-- Money Ladder -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sticky top-4">
+                        <h3 class="text-lg font-bold mb-4 text-center">Prize Ladder</h3>
+                        <div id="moneyLadder" class="space-y-2">
+                            <!-- Money ladder will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Game Area -->
+                <div class="lg:col-span-2">
+                    <!-- Welcome Screen -->
+                    <div id="welcomeScreen" class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
+                        <h2 class="text-3xl font-bold mb-4 text-primary">Welcome to Math Millionaire!</h2>
+                        <p class="text-lg mb-6">Test your math skills and climb the money ladder!</p>
+                        <div class="mb-6">
+                            <h3 class="text-xl font-semibold mb-3">Game Rules:</h3>
+                            <ul class="text-left max-w-md mx-auto space-y-2">
+                                <li>• Answer 15 math questions correctly</li>
+                                <li>• Each question increases in difficulty</li>
+                                <li>• Use lifelines when you're stuck</li>
+                                <li>• Wrong answer ends the game</li>
+                                <li>• Reach $1,000,000 to win!</li>
+                            </ul>
+                        </div>
+                        <button id="startGame" class="bg-primary text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-opacity-90 transition-colors">
+                            Start Game
+                        </button>
+                    </div>
+
+                    <!-- Game Screen -->
+                    <div id="gameScreen" class="hidden">
+                        <!-- Question Area -->
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
+                            <div class="text-center mb-4">
+                                <div class="text-2xl font-bold text-primary mb-2" id="currentPrize">$100</div>
+                                <!-- Timer -->
+                                <div class="mb-4">
+                                    <div class="flex items-center justify-center mb-2">
+                                        <span class="text-sm font-semibold mr-2">Time:</span>
+                                        <div id="timerDisplay" class="text-2xl font-bold px-3 py-1 rounded bg-green-500 text-white min-w-[60px]">30</div>
+                                    </div>
+                                    <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                                        <div id="timerBar" class="bg-green-500 h-2 rounded-full transition-all duration-1000" style="width: 100%"></div>
+                                    </div>
+                                </div>
+                                <div class="text-lg font-semibold" id="questionText">Loading question...</div>
+                                <!-- Feedback Message -->
+                                <div id="feedbackMessage" class="hidden mt-4 text-2xl font-bold text-center">
+                                    <span id="feedbackText"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Answers -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <button class="answer-btn bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg p-4 text-left hover:border-primary hover:bg-gray-50 dark:hover:bg-gray-700 transition-all" data-answer="A">
+                                <span class="font-bold text-primary mr-2">A:</span>
+                                <span class="answer-text"></span>
+                            </button>
+                            <button class="answer-btn bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg p-4 text-left hover:border-primary hover:bg-gray-50 dark:hover:bg-gray-700 transition-all" data-answer="B">
+                                <span class="font-bold text-primary mr-2">B:</span>
+                                <span class="answer-text"></span>
+                            </button>
+                            <button class="answer-btn bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg p-4 text-left hover:border-primary hover:bg-gray-50 dark:hover:bg-gray-700 transition-all" data-answer="C">
+                                <span class="font-bold text-primary mr-2">C:</span>
+                                <span class="answer-text"></span>
+                            </button>
+                            <button class="answer-btn bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg p-4 text-left hover:border-primary hover:bg-gray-50 dark:hover:bg-gray-700 transition-all" data-answer="D">
+                                <span class="font-bold text-primary mr-2">D:</span>
+                                <span class="answer-text"></span>
+                            </button>
+                        </div>
+
+                        <!-- Lifelines -->
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                            <h3 class="text-lg font-semibold mb-3">Lifelines</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                <button id="fiftyFifty" class="lifeline-btn bg-yellow-500 text-white px-4 py-2 rounded font-semibold hover:bg-yellow-600 transition-colors">
+                                    50:50
+                                </button>
+                                <button id="askAudience" class="lifeline-btn bg-blue-500 text-white px-4 py-2 rounded font-semibold hover:bg-blue-600 transition-colors">
+                                    Ask Audience
+                                </button>
+                                <button id="phoneHelper" class="lifeline-btn bg-green-500 text-white px-4 py-2 rounded font-semibold hover:bg-green-600 transition-colors">
+                                    Phone Helper
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Game Over Screen -->
+                    <div id="gameOverScreen" class="hidden bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
+                        <h2 class="text-3xl font-bold mb-4" id="gameOverTitle">Game Over!</h2>
+                        <p class="text-xl mb-4" id="gameOverMessage">You won $0</p>
+                        <p class="text-lg mb-6" id="gameOverDetails">Better luck next time!</p>
+                        <button id="playAgain" class="bg-primary text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-opacity-90 transition-colors">
+                            Play Again
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audience Poll Modal -->
+        <div id="audienceModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+                <h3 class="text-xl font-bold mb-4">Audience Poll Results</h3>
+                <div id="audiencePoll" class="space-y-2 mb-4">
+                    <!-- Poll results will be inserted here -->
+                </div>
+                <button id="closeAudienceModal" class="bg-primary text-white px-4 py-2 rounded hover:bg-opacity-90 transition-colors">
+                    Close
+                </button>
+            </div>
+        </div>
+
+        <!-- Phone Helper Modal -->
+        <div id="phoneModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+                <h3 class="text-xl font-bold mb-4">📞 Phone a Helper</h3>
+                <p id="phoneHelperText" class="text-lg mb-4">
+                    <!-- Helper advice will be inserted here -->
+                </p>
+                <button id="closePhoneModal" class="bg-primary text-white px-4 py-2 rounded hover:bg-opacity-90 transition-colors">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        class MathMillionaire {
+            constructor() {
+                this.currentQuestionIndex = 0;
+                this.currentPrize = 0;
+                this.gameActive = false;
+                this.timerActive = false;
+                this.timeLeft = 30;
+                this.timerInterval = null;
+                this.lifelines = {
+                    fiftyFifty: true,
+                    askAudience: true,
+                    phoneHelper: true
+                };
+                
+                this.moneyLadder = [
+                    100, 200, 300, 500, 1000,
+                    2000, 4000, 8000, 16000, 32000,
+                    64000, 125000, 250000, 500000, 1000000
+                ];
+
+                this.questions = [
+                    // Easy questions (1-5)
+                    { question: "What is 5 + 3?", answers: ["6", "8", "9", "10"], correct: 1 },
+                    { question: "What is 10 - 4?", answers: ["5", "6", "7", "8"], correct: 1 },
+                    { question: "What is 3 × 4?", answers: ["10", "11", "12", "13"], correct: 2 },
+                    { question: "What is 15 ÷ 3?", answers: ["4", "5", "6", "7"], correct: 1 },
+                    { question: "What is 2 + 2 + 2?", answers: ["4", "6", "8", "10"], correct: 1 },
+                    
+                    // Medium questions (6-10)
+                    { question: "What is 25 + 17?", answers: ["40", "41", "42", "43"], correct: 2 },
+                    { question: "What is 8 × 7?", answers: ["54", "55", "56", "57"], correct: 2 },
+                    { question: "What is 100 - 23?", answers: ["76", "77", "78", "79"], correct: 1 },
+                    { question: "What is 144 ÷ 12?", answers: ["11", "12", "13", "14"], correct: 1 },
+                    { question: "What is 6²?", answers: ["30", "32", "34", "36"], correct: 3 },
+                    
+                    // Hard questions (11-15)
+                    { question: "What is 15% of 200?", answers: ["25", "30", "35", "40"], correct: 1 },
+                    { question: "What is √64?", answers: ["6", "7", "8", "9"], correct: 2 },
+                    { question: "If x + 7 = 15, what is x?", answers: ["6", "7", "8", "9"], correct: 2 },
+                    { question: "What is 3! (3 factorial)?", answers: ["3", "6", "9", "12"], correct: 1 },
+                    { question: "What is the area of a rectangle 12cm × 8cm?", answers: ["88cm²", "92cm²", "96cm²", "100cm²"], correct: 2 }
+                ];
+
+                this.initializeGame();
+            }
+
+            initializeGame() {
+                this.setupEventListeners();
+                this.renderMoneyLadder();
+                this.showWelcomeScreen();
+            }
+
+            setupEventListeners() {
+                document.getElementById('startGame').addEventListener('click', () => this.startGame());
+                document.getElementById('playAgain').addEventListener('click', () => this.resetGame());
+                
+                // Answer buttons
+                document.querySelectorAll('.answer-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => this.selectAnswer(e.target.closest('.answer-btn')));
+                });
+
+                // Lifeline buttons
+                document.getElementById('fiftyFifty').addEventListener('click', () => this.useFiftyFifty());
+                document.getElementById('askAudience').addEventListener('click', () => this.useAskAudience());
+                document.getElementById('phoneHelper').addEventListener('click', () => this.usePhoneHelper());
+
+                // Modal close buttons
+                document.getElementById('closeAudienceModal').addEventListener('click', () => {
+                    document.getElementById('audienceModal').classList.add('hidden');
+                });
+                document.getElementById('closePhoneModal').addEventListener('click', () => {
+                    document.getElementById('phoneModal').classList.add('hidden');
+                });
+            }
+
+            renderMoneyLadder() {
+                const ladder = document.getElementById('moneyLadder');
+                ladder.innerHTML = '';
+                
+                for (let i = this.moneyLadder.length - 1; i >= 0; i--) {
+                    const amount = this.moneyLadder[i];
+                    const div = document.createElement('div');
+                    div.className = `p-2 rounded text-center font-semibold ${
+                        i === this.currentQuestionIndex ? 'bg-primary text-white' :
+                        i < this.currentQuestionIndex ? 'bg-green-500 text-white' :
+                        'bg-gray-200 dark:bg-gray-700'
+                    }`;
+                    div.textContent = `$${amount.toLocaleString()}`;
+                    ladder.appendChild(div);
+                }
+            }
+
+            showWelcomeScreen() {
+                document.getElementById('welcomeScreen').classList.remove('hidden');
+                document.getElementById('gameScreen').classList.add('hidden');
+                document.getElementById('gameOverScreen').classList.add('hidden');
+            }
+
+            startGame() {
+                this.gameActive = true;
+                this.currentQuestionIndex = 0;
+                this.currentPrize = 0;
+                this.lifelines = { fiftyFifty: true, askAudience: true, phoneHelper: true };
+                
+                document.getElementById('welcomeScreen').classList.add('hidden');
+                document.getElementById('gameScreen').classList.remove('hidden');
+                
+                this.updateLifelineButtons();
+                this.renderMoneyLadder();
+                this.showQuestion();
+            }
+
+            showQuestion() {
+                const question = this.questions[this.currentQuestionIndex];
+                document.getElementById('currentQuestion').textContent = this.currentQuestionIndex + 1;
+                document.getElementById('currentPrize').textContent = `$${this.moneyLadder[this.currentQuestionIndex].toLocaleString()}`;
+                document.getElementById('questionText').textContent = question.question;
+
+                const answerBtns = document.querySelectorAll('.answer-btn');
+                answerBtns.forEach((btn, index) => {
+                    btn.querySelector('.answer-text').textContent = question.answers[index];
+                    btn.classList.remove('hidden', 'bg-green-500', 'bg-red-500', 'border-green-500', 'border-red-500');
+                    btn.classList.add('border-gray-300', 'dark:border-gray-600');
+                    btn.disabled = false;
+                });
+
+                // Hide feedback message from previous question
+                document.getElementById('feedbackMessage').classList.add('hidden');
+
+                // Start timer for the question
+                this.startTimer();
+            }
+
+            startTimer() {
+                this.timeLeft = 30;
+                this.timerActive = true;
+                this.updateTimerDisplay();
+                
+                this.timerInterval = setInterval(() => {
+                    this.timeLeft--;
+                    this.updateTimerDisplay();
+                    
+                    if (this.timeLeft <= 0) {
+                        this.timeUp();
+                    }
+                }, 1000);
+            }
+
+            stopTimer() {
+                this.timerActive = false;
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                    this.timerInterval = null;
+                }
+            }
+
+            updateTimerDisplay() {
+                const timerDisplay = document.getElementById('timerDisplay');
+                const timerBar = document.getElementById('timerBar');
+                
+                timerDisplay.textContent = this.timeLeft;
+                
+                // Update timer bar width
+                const percentage = (this.timeLeft / 30) * 100;
+                timerBar.style.width = `${percentage}%`;
+                
+                // Change colors based on time left
+                if (this.timeLeft <= 5) {
+                    timerDisplay.className = 'text-2xl font-bold px-3 py-1 rounded bg-red-500 text-white min-w-[60px] animate-pulse';
+                    timerBar.className = 'bg-red-500 h-2 rounded-full transition-all duration-1000';
+                } else if (this.timeLeft <= 10) {
+                    timerDisplay.className = 'text-2xl font-bold px-3 py-1 rounded bg-yellow-500 text-white min-w-[60px]';
+                    timerBar.className = 'bg-yellow-500 h-2 rounded-full transition-all duration-1000';
+                } else {
+                    timerDisplay.className = 'text-2xl font-bold px-3 py-1 rounded bg-green-500 text-white min-w-[60px]';
+                    timerBar.className = 'bg-green-500 h-2 rounded-full transition-all duration-1000';
+                }
+            }
+
+            timeUp() {
+                this.stopTimer();
+                if (this.gameActive) {
+                    this.gameActive = false;
+                    document.querySelectorAll('.answer-btn').forEach(btn => btn.disabled = true);
+                    
+                    // Show correct answer
+                    const correctIndex = this.questions[this.currentQuestionIndex].correct;
+                    document.querySelectorAll('.answer-btn').forEach((btn, index) => {
+                        if (index === correctIndex) {
+                            btn.classList.remove('border-gray-300', 'dark:border-gray-600');
+                            btn.classList.add('bg-green-500', 'border-green-500', 'text-white');
+                        }
+                    });
+                    
+                    setTimeout(() => {
+                        this.endGame(false, 'Time\'s up! ⏰');
+                    }, 2000);
+                }
+            }
+
+            selectAnswer(selectedBtn) {
+                if (!this.gameActive) return;
+
+                const selectedIndex = Array.from(document.querySelectorAll('.answer-btn')).indexOf(selectedBtn);
+                const correctIndex = this.questions[this.currentQuestionIndex].correct;
+                const isCorrect = selectedIndex === correctIndex;
+                
+                this.gameActive = false;
+                this.stopTimer();
+                
+                // Disable all buttons
+                document.querySelectorAll('.answer-btn').forEach(btn => btn.disabled = true);
+
+                if (isCorrect) {
+                    this.showCorrectAnswerAnimation(selectedBtn);
+                } else {
+                    this.showWrongAnswerAnimation(selectedBtn, correctIndex);
+                }
+
+                setTimeout(() => {
+                    if (isCorrect) {
+                        this.currentPrize = this.moneyLadder[this.currentQuestionIndex];
+                        this.currentQuestionIndex++;
+                        
+                        if (this.currentQuestionIndex >= this.questions.length) {
+                            this.endGame(true);
+                        } else {
+                            this.gameActive = true;
+                            this.renderMoneyLadder();
+                            this.showQuestion();
+                        }
+                    } else {
+                        this.endGame(false);
+                    }
+                }, 3000);
+            }
+
+            showCorrectAnswerAnimation(selectedBtn) {
+                // Animate the selected correct answer
+                selectedBtn.classList.remove('border-gray-300', 'dark:border-gray-600');
+                selectedBtn.classList.add('bg-green-500', 'border-green-500', 'text-white', 'animate-celebrate');
+                
+                // Flash the background green
+                document.body.classList.add('animate-flash-green');
+                
+                // Show celebration message
+                const feedbackMessage = document.getElementById('feedbackMessage');
+                const feedbackText = document.getElementById('feedbackText');
+                
+                const celebrations = [
+                    '🎉 Excellent! 🎉',
+                    '✨ Perfect! ✨',
+                    '🌟 Outstanding! 🌟',
+                    '🎊 Brilliant! 🎊',
+                    '💫 Amazing! 💫'
+                ];
+                
+                feedbackText.textContent = celebrations[Math.floor(Math.random() * celebrations.length)];
+                feedbackText.className = 'text-green-500 animate-bounce';
+                feedbackMessage.classList.remove('hidden');
+                
+                // Add sparkle effects to the money ladder
+                this.animateMoneyLadder();
+                
+                // Clean up animations after delay
+                setTimeout(() => {
+                    document.body.classList.remove('animate-flash-green');
+                    selectedBtn.classList.remove('animate-celebrate');
+                    feedbackMessage.classList.add('hidden');
+                }, 2500);
+            }
+
+            showWrongAnswerAnimation(selectedBtn, correctIndex) {
+                // Animate the selected wrong answer
+                selectedBtn.classList.remove('border-gray-300', 'dark:border-gray-600');
+                selectedBtn.classList.add('bg-red-500', 'border-red-500', 'text-white', 'animate-shake');
+                
+                // Flash the background red
+                document.body.classList.add('animate-flash-red');
+                
+                // Show the correct answer with a glow
+                const correctBtn = document.querySelectorAll('.answer-btn')[correctIndex];
+                setTimeout(() => {
+                    correctBtn.classList.remove('border-gray-300', 'dark:border-gray-600');
+                    correctBtn.classList.add('bg-green-500', 'border-green-500', 'text-white', 'animate-pulse');
+                }, 800);
+                
+                // Show disappointment message
+                const feedbackMessage = document.getElementById('feedbackMessage');
+                const feedbackText = document.getElementById('feedbackText');
+                
+                const disappointments = [
+                    '😞 Oops! Wrong answer',
+                    '💔 Not quite right',
+                    '😰 So close!',
+                    '😔 Better luck next time',
+                    '🤦‍♂️ Oh no!'
+                ];
+                
+                feedbackText.textContent = disappointments[Math.floor(Math.random() * disappointments.length)];
+                feedbackText.className = 'text-red-500 animate-pulse';
+                feedbackMessage.classList.remove('hidden');
+                
+                // Shake the timer display
+                document.getElementById('timerDisplay').classList.add('animate-shake');
+                
+                // Clean up animations after delay
+                setTimeout(() => {
+                    document.body.classList.remove('animate-flash-red');
+                    selectedBtn.classList.remove('animate-shake');
+                    correctBtn.classList.remove('animate-pulse');
+                    document.getElementById('timerDisplay').classList.remove('animate-shake');
+                    feedbackMessage.classList.add('hidden');
+                }, 2500);
+            }
+
+            animateMoneyLadder() {
+                const currentLadderStep = document.querySelectorAll('#moneyLadder div')[
+                    this.moneyLadder.length - 1 - this.currentQuestionIndex
+                ];
+                if (currentLadderStep) {
+                    currentLadderStep.classList.add('animate-pulse');
+                    setTimeout(() => {
+                        currentLadderStep.classList.remove('animate-pulse');
+                    }, 2000);
+                }
+            }
+
+            useFiftyFifty() {
+                if (!this.lifelines.fiftyFifty || !this.gameActive) return;
+                
+                this.lifelines.fiftyFifty = false;
+                const correctIndex = this.questions[this.currentQuestionIndex].correct;
+                const answerBtns = document.querySelectorAll('.answer-btn');
+                
+                let hiddenCount = 0;
+                let indices = [0, 1, 2, 3].filter(i => i !== correctIndex);
+                
+                // Randomly hide 2 wrong answers
+                while (hiddenCount < 2 && indices.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * indices.length);
+                    const btnIndex = indices.splice(randomIndex, 1)[0];
+                    answerBtns[btnIndex].classList.add('hidden');
+                    hiddenCount++;
+                }
+                
+                this.updateLifelineButtons();
+            }
+
+            useAskAudience() {
+                if (!this.lifelines.askAudience || !this.gameActive) return;
+                
+                this.lifelines.askAudience = false;
+                const correctIndex = this.questions[this.currentQuestionIndex].correct;
+                
+                // Generate audience poll (biased toward correct answer)
+                let percentages = [0, 0, 0, 0];
+                percentages[correctIndex] = 40 + Math.floor(Math.random() * 30); // 40-70%
+                
+                let remaining = 100 - percentages[correctIndex];
+                for (let i = 0; i < 4; i++) {
+                    if (i !== correctIndex && remaining > 0) {
+                        const amount = Math.floor(Math.random() * (remaining / 2)) + 5;
+                        percentages[i] = Math.min(amount, remaining);
+                        remaining -= percentages[i];
+                    }
+                }
+                
+                // Distribute any remaining percentage
+                if (remaining > 0) {
+                    percentages[correctIndex] += remaining;
+                }
+
+                const pollDiv = document.getElementById('audiencePoll');
+                pollDiv.innerHTML = '';
+                
+                ['A', 'B', 'C', 'D'].forEach((letter, index) => {
+                    const isHidden = document.querySelectorAll('.answer-btn')[index].classList.contains('hidden');
+                    if (!isHidden) {
+                        const div = document.createElement('div');
+                        div.className = 'flex items-center justify-between';
+                        div.innerHTML = `
+                            <span class="font-semibold">${letter}:</span>
+                            <div class="flex items-center">
+                                <div class="w-32 bg-gray-200 dark:bg-gray-600 rounded-full h-4 mr-2">
+                                    <div class="bg-primary h-4 rounded-full" style="width: ${percentages[index]}%"></div>
+                                </div>
+                                <span class="font-semibold">${percentages[index]}%</span>
+                            </div>
+                        `;
+                        pollDiv.appendChild(div);
+                    }
+                });
+
+                document.getElementById('audienceModal').classList.remove('hidden');
+                this.updateLifelineButtons();
+            }
+
+            usePhoneHelper() {
+                if (!this.lifelines.phoneHelper || !this.gameActive) return;
+                
+                this.lifelines.phoneHelper = false;
+                const correctIndex = this.questions[this.currentQuestionIndex].correct;
+                const correctLetter = ['A', 'B', 'C', 'D'][correctIndex];
+                
+                const advice = [
+                    `I'm pretty sure the answer is ${correctLetter}. I just calculated it myself!`,
+                    `My gut feeling says ${correctLetter}. I'm about 80% confident on this one.`,
+                    `I think it's ${correctLetter}, but you should double-check my math.`,
+                    `After working through this problem, I believe the answer is ${correctLetter}.`
+                ];
+                
+                document.getElementById('phoneHelperText').textContent = advice[Math.floor(Math.random() * advice.length)];
+                document.getElementById('phoneModal').classList.remove('hidden');
+                this.updateLifelineButtons();
+            }
+
+            updateLifelineButtons() {
+                document.getElementById('fiftyFifty').disabled = !this.lifelines.fiftyFifty;
+                document.getElementById('askAudience').disabled = !this.lifelines.askAudience;
+                document.getElementById('phoneHelper').disabled = !this.lifelines.phoneHelper;
+                
+                if (!this.lifelines.fiftyFifty) document.getElementById('fiftyFifty').classList.add('opacity-50');
+                if (!this.lifelines.askAudience) document.getElementById('askAudience').classList.add('opacity-50');
+                if (!this.lifelines.phoneHelper) document.getElementById('phoneHelper').classList.add('opacity-50');
+            }
+
+            endGame(won, customMessage = null) {
+                this.stopTimer(); // Make sure timer is stopped
+                document.getElementById('gameScreen').classList.add('hidden');
+                document.getElementById('gameOverScreen').classList.remove('hidden');
+                
+                const title = document.getElementById('gameOverTitle');
+                const message = document.getElementById('gameOverMessage');
+                const details = document.getElementById('gameOverDetails');
+                
+                if (won) {
+                    title.textContent = "🎉 CONGRATULATIONS! 🎉";
+                    title.className = "text-3xl font-bold mb-4 text-green-500";
+                    message.textContent = "You are a MILLIONAIRE!";
+                    details.textContent = "You've successfully answered all 15 questions and won $1,000,000!";
+                } else {
+                    title.textContent = "Game Over";
+                    title.className = "text-3xl font-bold mb-4 text-red-500";
+                    message.textContent = `You won $${this.currentPrize.toLocaleString()}`;
+                    details.textContent = customMessage || "Don't worry, practice makes perfect! Try again to improve your score.";
+                }
+            }
+
+            resetGame() {
+                this.showWelcomeScreen();
+                this.renderMoneyLadder();
+            }
+        }
+
+        // Initialize the game
+        const game = new MathMillionaire();
+    </script>
+</body>
+</html>
